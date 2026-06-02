@@ -103,9 +103,19 @@ async function kirimQR(qrId){
 
 }
 
+let sedangScan = false;
+
 function onScanSuccess(decodedText){
 
+    if(sedangScan) return;
+
+    sedangScan = true;
+
     kirimQR(decodedText);
+
+    setTimeout(()=>{
+        sedangScan = false;
+    },3000);
 
 }
 

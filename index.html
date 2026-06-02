@@ -1,10 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>Absensi Sekolah</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presensi QR SDN 3 Sidamulya</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://unpkg.com/html5-qrcode"></script>
 </head>
+
 <body>
-    <h1>Absensi Sekolah</h1>
-    <p>Website berhasil online.</p>
+
+<div class="container">
+
+    <div class="header">
+        <h1>UPTD SDN 3 SIDAMULYA</h1>
+        <p>Sistem Presensi QR Siswa</p>
+    </div>
+
+    <div class="status-box">
+        <span id="mode">MODE : MEMUAT...</span>
+    </div>
+
+    <div id="reader"></div>
+
+    <div id="result" class="result">
+
+        <h2>Arahkan Kartu ke Kamera</h2>
+
+    </div>
+
+</div>
+
+<script src="app.js"></script>
+
 </body>
 </html>

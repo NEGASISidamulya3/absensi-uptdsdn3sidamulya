@@ -1,3 +1,5 @@
+alert("APP.JS TERBARU LOADED");
+
 const API_URL =
 "https://script.google.com/macros/s/AKfycbyMKZIhJgdu5vBIpVBA30lsXNaLBI7zmMqEn8wv55KkVA6ejpBpB-tpoHsujLZRGL_n/exec";
 

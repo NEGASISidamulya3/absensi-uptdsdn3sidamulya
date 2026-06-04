@@ -1,18 +1,28 @@
-alert("APP.JS TERBARU LOADED");
-
-const API_URL =
+const API =
 "https://script.google.com/macros/s/AKfycbyMKZIhJgdu5vBIpVBA30lsXNaLBI7zmMqEn8wv55KkVA6ejpBpB-tpoHsujLZRGL_n/exec";
 
-const resultBox = document.getElementById("result");
+const result =
+document.getElementById("result");
+
+const modeEl =
+document.getElementById("mode");
+
+let lockScan = false;
+
+function getMode() {
+
+    const hour =
+    new Date().getHours();
+
+    return hour < 12
+    ? "MASUK"
+    : "PULANG";
+}
 
 function updateMode() {
 
-    const hour = new Date().getHours();
-
-    document.getElementById("mode").innerText =
-        hour < 12
-        ? "MODE : MASUK"
-        : "MODE : PULANG";
+    modeEl.innerHTML =
+    "MODE : " + getMode();
 }
 
 updateMode();
@@ -21,141 +31,122 @@ function beep() {
 
     try {
 
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const ctx =
+        new(window.AudioContext ||
+        window.webkitAudioContext)();
 
-        const osc = ctx.createOscillator();
+        const osc =
+        ctx.createOscillator();
 
-        osc.frequency.value = 1000;
+        osc.frequency.value = 1200;
 
-        osc.connect(ctx.destination);
+        osc.connect(
+            ctx.destination
+        );
 
         osc.start();
 
-        setTimeout(() => {
+        setTimeout(()=>{
             osc.stop();
-        }, 150);
+        },150);
 
-    } catch (e) {
-        console.log(e);
-    }
+    } catch(e) {}
 }
 
-let sedangScan = false;
+function showSuccess(data) {
+
+    result.className =
+    "result success";
+
+    result.innerHTML = `
+        <h2>✅ PRESENSI BERHASIL</h2>
+        <h3>${data.nama}</h3>
+        <p>${data.kelas}</p>
+        <p>${data.mode}</p>
+        <p>${data.jam}</p>
+    `;
+}
+
+function showError(msg) {
+
+    result.className =
+    "result error";
+
+    result.innerHTML = `
+        <h2>⚠ ${msg}</h2>
+    `;
+}
 
 async function kirimQR(qrId) {
 
     try {
 
-        console.log("QR TERBACA:", qrId);
+        const url =
+        API +
+        "?qrId=" +
+        encodeURIComponent(qrId);
 
-        const response = await fetch(API_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                qrId: qrId
-            })
-        });
+        const response =
+        await fetch(url);
 
-        const text = await response.text();
-
-        console.log("RESPON API:");
-        console.log(text);
-
-        let data;
-
-        try {
-
-            data = JSON.parse(text);
-
-        } catch (err) {
-
-            resultBox.className = "result error";
-
-            resultBox.innerHTML = `
-                <h2>❌ RESPON API TIDAK VALID</h2>
-                <p>Lihat Console Browser</p>
-            `;
-
-            sedangScan = false;
-
-            return;
-        }
+        const data =
+        await response.json();
 
         beep();
 
-        if (data.success === true) {
+        if(data.success){
 
-            resultBox.className = "result success";
-
-            resultBox.innerHTML = `
-                <h2>✅ PRESENSI BERHASIL</h2>
-                <h3>${data.nama || "-"}</h3>
-                <p>${data.kelas || "-"}</p>
-                <p>${data.mode || "-"}</p>
-                <p>${data.jam || "-"}</p>
-            `;
+            showSuccess(data);
 
         } else {
 
-            resultBox.className = "result error";
-
-            resultBox.innerHTML = `
-                <h2>⚠ ${data.message || "Terjadi Kesalahan"}</h2>
-                <h3>${data.nama || ""}</h3>
-                <p>${data.kelas || ""}</p>
-            `;
+            showError(
+                data.message
+            );
         }
 
-        setTimeout(() => {
+    } catch(err) {
 
-            resultBox.className = "result";
-
-            resultBox.innerHTML = `
-                <h2>Arahkan Kartu ke Kamera</h2>
-            `;
-
-            sedangScan = false;
-
-        }, 3000);
-
-    } catch (err) {
-
-        alert(err);
+        showError(
+            "SERVER TIDAK TERHUBUNG"
+        );
 
         console.error(err);
 
-        resultBox.className = "result error";
+    }
 
-        resultBox.innerHTML = `
-        <h2>❌ GAGAL TERHUBUNG KE SERVER</h2>
-        <p>${err}</p>
-    `    ;
-    }    
+    setTimeout(()=>{
+
+        result.className =
+        "result";
+
+        result.innerHTML =
+        "<h2>Silakan Scan QR</h2>";
+
+        lockScan = false;
+
+    },3000);
 }
 
-function onScanSuccess(decodedText){
+function onScanSuccess(text) {
 
-    alert("QR TERBACA = " + decodedText);
+    if(lockScan) return;
 
-    if(sedangScan) return;
+    lockScan = true;
 
-    sedangScan = true;
-
-    kirimQR(decodedText);
-
+    kirimQR(text);
 }
 
-const html5QrCode = new Html5Qrcode("reader");
+const qr =
+new Html5Qrcode("reader");
 
-html5QrCode.start(
+qr.start(
     {
-        facingMode: "user"
+        facingMode:"user"
     },
     {
-        fps: 10,
-        qrbox: 250
+        fps:10,
+        qrbox:250
     },
     onScanSuccess
 );

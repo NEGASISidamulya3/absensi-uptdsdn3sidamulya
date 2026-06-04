@@ -1,140 +1,158 @@
 const API_URL =
 "https://script.google.com/macros/s/AKfycbyMKZIhJgdu5vBIpVBA30lsXNaLBI7zmMqEn8wv55KkVA6ejpBpB-tpoHsujLZRGL_n/exec";
 
-const resultBox =
-document.getElementById("result");
+const resultBox = document.getElementById("result");
 
-function updateMode(){
+function updateMode() {
 
-    const hour =
-    new Date().getHours();
+    const hour = new Date().getHours();
 
-    const mode =
-    hour < 12
-    ? "MODE : MASUK"
-    : "MODE : PULANG";
-
-    document.getElementById("mode")
-    .innerText = mode;
-
+    document.getElementById("mode").innerText =
+        hour < 12
+        ? "MODE : MASUK"
+        : "MODE : PULANG";
 }
 
 updateMode();
 
-function beep(){
+function beep() {
 
-    const ctx =
-    new(window.AudioContext ||
-    window.webkitAudioContext)();
+    try {
 
-    const osc =
-    ctx.createOscillator();
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
 
-    osc.connect(ctx.destination);
+        const osc = ctx.createOscillator();
 
-    osc.frequency.value = 1000;
+        osc.frequency.value = 1000;
 
-    osc.start();
+        osc.connect(ctx.destination);
 
-    setTimeout(()=>{
-        osc.stop();
-    },150);
+        osc.start();
 
+        setTimeout(() => {
+            osc.stop();
+        }, 150);
+
+    } catch (e) {
+        console.log(e);
+    }
 }
 
-async function kirimQR(qrId){
+let sedangScan = false;
 
-    try{
+async function kirimQR(qrId) {
 
-        const response =
-        await fetch(API_URL,{
-            method:"POST",
-            body:JSON.stringify({
-                qrId:qrId
+    try {
+
+        console.log("QR TERBACA:", qrId);
+
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                qrId: qrId
             })
         });
 
         const text = await response.text();
 
         console.log("RESPON API:");
-        alert(text);
+        console.log(text);
 
-        const data = JSON.parse(text);
+        let data;
+
+        try {
+
+            data = JSON.parse(text);
+
+        } catch (err) {
+
+            resultBox.className = "result error";
+
+            resultBox.innerHTML = `
+                <h2>❌ RESPON API TIDAK VALID</h2>
+                <p>Lihat Console Browser</p>
+            `;
+
+            sedangScan = false;
+
+            return;
+        }
 
         beep();
 
-        if(data.success){
+        if (data.success === true) {
 
-            resultBox.className =
-            "result success";
+            resultBox.className = "result success";
 
-            resultBox.innerHTML=`
-            <h2>✅ PRESENSI BERHASIL</h2>
-            <h3>${data.nama}</h3>
-            <p>${data.kelas}</p>
-            <p>${data.mode}</p>
-            <p>${data.jam}</p>
+            resultBox.innerHTML = `
+                <h2>✅ PRESENSI BERHASIL</h2>
+                <h3>${data.nama || "-"}</h3>
+                <p>${data.kelas || "-"}</p>
+                <p>${data.mode || "-"}</p>
+                <p>${data.jam || "-"}</p>
             `;
 
-        }else{
+        } else {
 
-            resultBox.className =
-            "result error";
+            resultBox.className = "result error";
 
-            resultBox.innerHTML=`
-            <h2>⚠ ${data.message}</h2>
-            <h3>${data.nama || ""}</h3>
+            resultBox.innerHTML = `
+                <h2>⚠ ${data.message || "Terjadi Kesalahan"}</h2>
+                <h3>${data.nama || ""}</h3>
+                <p>${data.kelas || ""}</p>
             `;
-
         }
 
-        setTimeout(()=>{
+        setTimeout(() => {
 
-            resultBox.className =
-            "result";
+            resultBox.className = "result";
 
-            resultBox.innerHTML=
-            "<h2>Arahkan Kartu ke Kamera</h2>";
+            resultBox.innerHTML = `
+                <h2>Arahkan Kartu ke Kamera</h2>
+            `;
 
-        },3000);
+            sedangScan = false;
 
+        }, 3000);
+
+    } catch (err) {
+
+        console.error(err);
+
+        resultBox.className = "result error";
+
+        resultBox.innerHTML = `
+            <h2>❌ GAGAL TERHUBUNG KE SERVER</h2>
+            <p>${err}</p>
+        `;
+
+        setTimeout(() => {
+            sedangScan = false;
+        }, 3000);
     }
-    catch(err){
-
-    alert("ERROR: " + err);
-
-    console.log(err);
-
-    }
-
 }
 
-let sedangScan = false;
+function onScanSuccess(decodedText) {
 
-function onScanSuccess(decodedText){
-
-    if(sedangScan) return;
+    if (sedangScan) return;
 
     sedangScan = true;
 
     kirimQR(decodedText);
-
-    setTimeout(()=>{
-        sedangScan = false;
-    },3000);
-
 }
 
-const html5QrCode =
-new Html5Qrcode("reader");
+const html5QrCode = new Html5Qrcode("reader");
 
 html5QrCode.start(
     {
-        facingMode:"user"
+        facingMode: "user"
     },
     {
-        fps:10,
-        qrbox:250
+        fps: 10,
+        qrbox: 250
     },
     onScanSuccess
 );

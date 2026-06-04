@@ -135,13 +135,16 @@ async function kirimQR(qrId) {
     }    
 }
 
-function onScanSuccess(decodedText) {
+function onScanSuccess(decodedText){
 
-    if (sedangScan) return;
+    alert("QR TERBACA = " + decodedText);
+
+    if(sedangScan) return;
 
     sedangScan = true;
 
     kirimQR(decodedText);
+
 }
 
 const html5QrCode = new Html5Qrcode("reader");

@@ -120,19 +120,17 @@ async function kirimQR(qrId) {
 
     } catch (err) {
 
+        alert(err);
+
         console.error(err);
 
         resultBox.className = "result error";
 
         resultBox.innerHTML = `
-            <h2>❌ GAGAL TERHUBUNG KE SERVER</h2>
-            <p>${err}</p>
-        `;
-
-        setTimeout(() => {
-            sedangScan = false;
-        }, 3000);
-    }
+        <h2>❌ GAGAL TERHUBUNG KE SERVER</h2>
+        <p>${err}</p>
+    `    ;
+    }    
 }
 
 function onScanSuccess(decodedText) {

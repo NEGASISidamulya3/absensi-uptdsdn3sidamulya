@@ -54,8 +54,12 @@ async function kirimQR(qrId){
             })
         });
 
-        const data =
-        await response.json();
+        const text = await response.text();
+
+        console.log("RESPON API:");
+        alert(text);
+
+        const data = JSON.parse(text);
 
         beep();
 
@@ -97,7 +101,9 @@ async function kirimQR(qrId){
     }
     catch(err){
 
-        console.log(err);
+    alert("ERROR: " + err);
+
+    console.log(err);
 
     }
 
